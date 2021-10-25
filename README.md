@@ -243,3 +243,20 @@ module.exports = config
 
 Essa não é a conexão em si, mas os dados para que realizemos a conexão.
 
+### 4.2. Configuração
+
+Em `server` , vamos criar o arquivo `.sequelizerc` (arquivos `rc` são arquivos de configuração, onde `rc` pode ser lido como `run commands` , `resource control` , `runtime configuration` ou `run control` . Perceba que começa com `.` , logo é um arquivo oculto).
+
+```sh
+touch .sequelizerc && code .sequelizerc
+```
+
+Dentro desse arquivo incluiremos o seguinte trecho de código:
+
+```js
+const path = require('path')
+
+module.exports = {
+    'config': path.resolve('config', 'database.js')
+}
+```
