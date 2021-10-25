@@ -260,3 +260,40 @@ module.exports = {
     'config': path.resolve('config', 'database.js')
 }
 ```
+
+## 5. Manipulação do BD (CRUD) com RAW Queries
+
+Vamos manipular nossos usuários a partir do banco de dados.
+
+### 5.1. Conectando com o BD
+
+No nosso controller de usuários, vamos importar o Sequelize e suas configurações inserindo esse trecho de código bem no início (por enquanto manteremos nosso JSON placeholder também):
+
+```js
+const Sequelize = require('sequelize'),
+    config = require('../config/database'),
+    db = new Sequelize(config)
+```
+
+### 5.2. Consultando (Read) usuários
+
+No método `index` , vamos atualizar para que fique assim:
+
+```js
+index: async (req, res, next) => {
+    const users = await db.query('SELECT * from users', {
+        type: Sequelize.QueryTypes.SELECT
+    })
+    res.render('users', {
+        titulo: 'Usuários',
+        subtitulo: 'Listagem de Usuários',
+        usuarios: users,
+        usuarioLogado: req.cookies.usuario,
+        usuarioAdmin: req.cookies.admin,
+        bannerTopo: '/images/banner-topo-usuarios-1564x472.png',
+        bannerMeio: '/images/banner-meio-usuarios-1920x1080.png'
+    });
+},
+```
+
+Veja que além de criarmos uma `RAW Query` para que o Sequelize consulte nosso BD, incluímos a palavra chave `async` antes dos argumentos da nossa função. Isso pois não sabemos quanto tempo demorará a consulta, então 'seguramos' o retorno até que recebamos um retorno da consulta.
