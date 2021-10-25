@@ -200,3 +200,46 @@ SELECT * FROM users;
 Para ver o diagrama de relacionamento de entidades (DER), basta executar o comando Rever Engineering ( `Control + R` ou `Database > Rever Engineer...` ).
 
 ___
+
+## 3. Instalação Sequelize
+
+Dentro da pasta `server` , vamos instalar as dependências:
+
+### 3.1. Dependências:
+
+```sh
+npm install sequelize mysql2 --save
+```
+
+### 3.2. Dependências de Desenvolvimento:
+
+```sh
+npm install --save -D sequelize-cli
+```
+
+## 4. Configuração Sequelize
+
+### 4.1. Dados de conexão
+
+Dentro da pasta server, vamos criar o arquivo `config/database.js` :
+
+```sh
+mkdir config && cd config && touch database.js && code database.js
+```
+
+No arquivo criado, vamos incluir as configurações de conexão (num projeto real devemos deixar esse arquivo oculto por ter dados sensíveis, de conexão com o BD):
+
+```js
+const config = {
+    username: 'root',
+    password: '',
+    database: 'projeto_sequelize',
+    host: 'localhost',
+    dialect: 'mysql'
+}
+
+module.exports = config
+```
+
+Essa não é a conexão em si, mas os dados para que realizemos a conexão.
+
