@@ -410,3 +410,70 @@ const user3 = await db.query(`SELECT * from users WHERE users.id = :id`, {
 ```
 
 Por fim, agora podemos apagar nossa importação de `usuariosPlaceholder.json` , afinal, agora estamos capturando as informações do próprio Banco (ou poderíamos deixar de 'retaguarda' - caso ocorra algum erro, usamos o JSON).
+
+### 5.4. Adicionando (Create) usuário
+
+Vamos atualizar o método `add` do controller acesso. Continuamos usando as RAW Queries.
+
+O primeiro passo é importarmos todas aquelas configurações:
+
+```js
+const Sequelize = require('sequelize'),
+    config = require('../config/database'),
+    db = new Sequelize(config)
+```
+
+E então incluirmos nossa query ao invés de manipularmos o JSON de placeholder:
+
+```js
+add: async (req, res, next) => {
+    const {
+        nome,
+        sobrenome,
+        apelido,
+        nascimento,
+        senha,
+        corPreferida,
+        avatar,
+        email,
+        telefone,
+        bio
+    } = req.body
+    const telefoneFormatted = telefone.replace(/\D/g, '')
+    const plano_id = 1
+    const papel_id = email.indexOf('@diament.com.br') > 0 ? 1 : 2
+    const user = await db.query(`
+      INSERT INTO users (nome, sobrenome, apelido, nascimento, senha, corPreferida, avatar, email, telefone, bio, plano_id, papel_id)
+      VALUES (:nome, :sobrenome, :apelido, :nascimento, :senha, :corPreferida, :avatar, :email, :telefoneFormatted, :bio, :plano_id, :papel_id)
+    `, {
+        replacements: {
+            nome,
+            sobrenome,
+            apelido,
+            nascimento,
+            senha,
+            corPreferida,
+            avatar,
+            email,
+            telefoneFormatted,
+            bio,
+            plano_id,
+            papel_id
+        },
+        type: Sequelize.QueryTypes.INSERT
+    })
+    if (user) {
+        res.redirect('../../usuarios')
+    } else {
+        res.status(500).send('Ops... Algo de errado não deu certo!')
+    }
+}
+```
+
+Ah! Também vamos fazer um pequeno ajuste no partial template `userDetails.ejs` para exibirmos o telefone de forma mais amigável (já que no bando está salvo apenas com números):
+
+```ejs
+<li>
+ <p><b>Telefone:</b> <%= `+${usuario.telefone.slice(0,2)} (${usuario.telefone.slice(2,4)}) ${usuario.telefone.slice(4,8)} ${usuario.telefone.slice(8)}` %></p>
+</li>
+```

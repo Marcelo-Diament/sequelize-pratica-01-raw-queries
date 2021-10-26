@@ -27,8 +27,8 @@
         <p><b>Email:</b> <%= usuario.email %></p>
       </li>
       <li>
-        <p><b>Telefone:</b> <%= usuario.telefone %></p>
-      </li>
+        <p><b>Telefone:</b> <%= `+${usuario.telefone.slice(0,2)} (${usuario.telefone.slice(2,4)}) ${usuario.telefone.slice(4,8)} ${usuario.telefone.slice(8)}` %></p>
+       </li>
       <li>
         <p><b>Nascimento:</b> <%= new Date(usuario.nascimento).toLocaleDateString('pt-BR') %></p>
       </li>

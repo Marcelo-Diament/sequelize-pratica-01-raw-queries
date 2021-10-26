@@ -1,6 +1,6 @@
 <% for(let usuario of usuarios) { %>
 
-<article id="userCard<%= usuario.id %>" class="card card--img-full  badge <%= usuario.plano === 3 ? 'badge-tertiary' : usuario.plano === 1 ? 'badge-secondary' : 'badge-primary' %>" data-badge="<%= usuario.plano === 3 ? 'VIP' : usuario.plano === 1 ? 'Free' : 'Pro' %>">
+<article id="userCard<%= usuario.id %>" class="card card--img-full  badge <%= usuario.plano_id === 3 ? 'badge-tertiary' : usuario.plano_id === 1 ? 'badge-secondary' : 'badge-primary' %>" data-badge="<%= usuario.plano_id === 3 ? 'VIP' : usuario.plano_id === 1 ? 'Free' : 'Pro' %>">
 
   <div class="card__img-container rounded">
 

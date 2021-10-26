@@ -1,3 +1,7 @@
+const Sequelize = require('sequelize'),
+  config = require('../config/database'),
+  db = new Sequelize(config)
+
 const fs = require('fs'),
   path = require('path')
 
@@ -10,19 +14,44 @@ const controller = {
       usuarioAdmin: req.cookies.admin
     });
   },
-  add: (req, res, next) => {
-    const usuarios = fs.readFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), 'utf-8')
-    let usuariosNew = JSON.parse(usuarios)
-    let newUsuario = req.body
-    let newId = usuariosNew[usuariosNew.length - 1].id + 1
-    newUsuario.plano_id = 1
-    newUsuario.criadoEm = new Date()
-    newUsuario.modificadoEm = new Date()
-    newUsuario.papel_id = 2
-    newUsuario.id = newId
-    usuariosNew.push(newUsuario)
-    fs.writeFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), JSON.stringify(usuariosNew))
-    res.redirect('../../usuarios')
+  add: async (req, res, next) => {
+    const {
+      nome,
+      sobrenome,
+      apelido,
+      nascimento,
+      senha,
+      corPreferida,
+      avatar,
+      email,
+      telefone,
+      bio
+    } = req.body
+    const telefoneFormatted = telefone.replace(/\D/g, '')
+    const plano_id = 1
+    const papel_id = email.indexOf('@diament.com.br') > 0 ? 1 : 2
+    const user = await db.query('INSERT INTO users (nome, sobrenome, apelido, nascimento, senha, corPreferida, avatar, email, telefone, bio) VALUES (:nome, :sobrenome, :apelido, :nascimento, :senha, :corPreferida, :avatar, :email, :telefoneFormatted, :bio)', {
+      replacements: {
+        nome,
+        sobrenome,
+        apelido,
+        nascimento,
+        senha,
+        corPreferida,
+        avatar,
+        email,
+        telefoneFormatted,
+        bio,
+        plano_id,
+        papel_id
+      },
+      type: Sequelize.QueryTypes.INSERT
+    })
+    if (user) {
+      res.redirect('../../usuarios')
+    } else {
+      res.status(500).send('Ops... Algo de errado não deu certo!')
+    }
   },
   login: (req, res, next) => {
     res.render('login', {
