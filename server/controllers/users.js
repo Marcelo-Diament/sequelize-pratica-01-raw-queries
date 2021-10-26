@@ -32,13 +32,16 @@ const controller = {
       bannerMeio: '/images/banner-meio-usuario-1920x1080.png'
     });
   },
-  list: (req, res, next) => {
+  list: async (req, res, next) => {
+    const users = await db.query('SELECT * FROM users', {
+      type: Sequelize.QueryTypes.SELECT
+    })
     let admin = req.cookies.admin
     if (!admin || admin === 'false') {
       res.render('users', {
         titulo: 'Ops!',
         subtitulo: 'Você não pode gerenciar usuários, apenas visualizá-los.',
-        usuarios: usuariosPlaceholder,
+        usuarios: users,
         usuarioLogado: req.cookies.usuario,
         usuarioAdmin: admin,
         bannerTopo: '/images/banner-topo-usuarios-1564x472.png',
@@ -48,7 +51,7 @@ const controller = {
       res.render('usersList', {
         titulo: 'Usuários',
         subtitulo: 'Listagem de Usuários',
-        usuarios: usuariosPlaceholder,
+        usuarios: users,
         usuarioLogado: req.cookies.usuario,
         usuarioAdmin: admin
       });

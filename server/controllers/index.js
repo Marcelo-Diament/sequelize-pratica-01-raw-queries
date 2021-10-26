@@ -1,12 +1,19 @@
+const Sequelize = require('sequelize'),
+  config = require('../config/database'),
+  db = new Sequelize(config)
+
 const usuariosPlaceholder = require('../data/usuariosPlaceholder.json')
 const produtosPlaceholder = require('../data/produtosPlaceholder.json')
 
 const controller = {
-  index: (req, res, next) => {
+  index: async (req, res, next) => {
+    const users = await db.query('SELECT * FROM users', {
+      type: Sequelize.QueryTypes.SELECT
+    })
     res.render('index', {
       titulo: 'Jeff Co.',
       subtitulo: 'Confira nossos Produtos e Usuários',
-      usuarios: usuariosPlaceholder,
+      usuarios: users,
       produtos: produtosPlaceholder,
       usuarioLogado: req.cookies.usuario,
       usuarioAdmin: req.cookies.admin,
