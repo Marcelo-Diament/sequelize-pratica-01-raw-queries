@@ -121,19 +121,26 @@ const controller = {
       bannerMeio: '/images/banner-meio-usuario-1920x1080.png'
     })
   },
-  delete: (req, res, next) => {
+  delete: async (req, res, next) => {
     const idBuscado = req.params.id.replace('/', '')
-    const usuariosOld = fs.readFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), 'utf-8')
-    let usuariosNew = JSON.parse(usuariosOld)
-    usuariosNew = usuariosNew.filter(usuario => usuario.id != idBuscado)
-    fs.writeFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), JSON.stringify(usuariosNew))
-    res.render('usersList', {
-      titulo: 'Usuários',
-      subtitulo: 'Listagem de Usuários',
-      usuarios: usuariosNew,
-      usuarioLogado: req.cookies.usuario,
-      usuarioAdmin: req.cookies.admin
+    const user = await db.query('DELETE FROM users WHERE users.id = :id', {
+      replacements: {
+        id: idBuscado
+      },
+      type: Sequelize.QueryTypes.DELETE
     })
+    if(!user) {
+      const users = await db.query('SELECT * FROM users', {type: Sequelize.QueryTypes.SELECT})
+      res.render('usersList', {
+        titulo: 'Usuários',
+        subtitulo: 'Listagem de Usuários',
+        usuarios: users,
+        usuarioLogado: req.cookies.usuario,
+        usuarioAdmin: req.cookies.admin
+      })
+    } else {
+      res.status(500).send('Ops... Algo de errado não deu certo!')
+    }
   },
   logout: (req, res, next) => {
     res.clearCookie('usuario').clearCookie('admin').redirect('../../')
