@@ -72,54 +72,63 @@ const controller = {
       usuarioAdmin: req.cookies.admin
     });
   },
-  update: (req, res, next) => {
-    const idBuscado = req.params.id.replace('/', '')
-    const usuariosOld = fs.readFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), 'utf-8')
-    let usuarios = JSON.parse(usuariosOld)
-    let usuario = usuarios.filter(usuario => usuario.id == idBuscado)[0]
+  update: async (req, res, next) => {
+    const { id } = req.params
+    const user = await db.query(`SELECT * from users WHERE users.id = ${id}`, {
+      type: Sequelize.QueryTypes.SELECT
+    })
     res.render('userUpdate', {
       titulo: 'Cadastro',
       subtitulo: req.cookies.usuario ? `Verifique os dados e atualize os que precisar` : 'Preencha os dados e complete seu cadastro!',
       usuarioLogado: req.cookies.usuario,
       usuarioAdmin: req.cookies.admin,
-      usuarioEditando: usuario
+      usuarioEditando: user[0]
     })
   },
-  edit: (req, res, next) => {
-    const idBuscado = req.params.id.replace('/', '')
-    const usuariosOld = fs.readFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), 'utf-8')
-    let usuarios = JSON.parse(usuariosOld)
-    let usuario = usuarios.filter(usuario => usuario.id == idBuscado)[0]
-
-    let usuarioAtualizado = req.body
-    for (let prop in usuarioAtualizado) {
-      if (usuarioAtualizado[prop] !== "") {
-        usuario[prop] = usuarioAtualizado[prop]
-      }
-    }
-    usuario.modificadoEm = new Date()
-
-    usuarios.forEach(usuarioFinal => {
-      if (usuarioFinal.id == usuario.id) {
-        usuarioFinal = usuario
-        usuarioFinal.id = parseInt(usuario.id)
-      }
+  edit: async (req, res, next) => {
+    let { id, nome, sobrenome, apelido, nascimento, senha, corPreferida, avatar, email, telefone, bio } = req.body
+    telefone = telefone.replace(/\D/g, '')
+    id = id.replace(/\D/g, '')
+    const modificadoEm = new Date()
+    const user = await db.query(`
+    UPDATE users
+    SET nome = :nome,
+      sobrenome = :sobrenome,
+      apelido = :apelido,
+      nascimento = :nascimento,
+      ${senha && 'senha = :senha,'}
+      corPreferida = :corPreferida,
+      ${avatar && 'avatar = :avatar,'}
+      email = :email,
+      telefone = :telefone,
+      bio = :bio,
+      modificadoEm = :modificadoEm
+    WHERE users.id = :id
+  `, {
+      replacements: {
+        id,
+        nome,
+        sobrenome,
+        apelido,
+        nascimento,
+        senha,
+        corPreferida,
+        avatar,
+        email,
+        telefone,
+        bio,
+        modificadoEm
+      },
+      type: Sequelize.QueryTypes.UPDATE
     })
-
-    fs.writeFileSync(path.join(__dirname, '..', 'data', 'usuariosPlaceholder.json'), JSON.stringify(usuarios))
-
-    if (req.cookies.usuario.id === usuario.id) {
-      res.clearCookie('usuario').cookie('usuario', usuario)
+    if (req.cookies.usuario.id === id) {
+      res.clearCookie('usuario').cookie('usuario', user)
     }
-    res.render('user', {
-      titulo: 'Usuário',
-      subtitulo: `Usuário #${idBuscado}`,
-      usuario,
-      usuarioLogado: req.cookies.usuario,
-      usuarioAdmin: req.cookies.admin,
-      bannerTopo: '/images/banner-topo-usuario-1564x472.png',
-      bannerMeio: '/images/banner-meio-usuario-1920x1080.png'
-    })
+    if (user) {
+      res.redirect(`../../usuarios/${id}`)
+    } else {
+      res.status(500).send('Ops... Algo de errado não deu certo!')
+    }
   },
   delete: async (req, res, next) => {
     const idBuscado = req.params.id.replace('/', '')
@@ -129,8 +138,8 @@ const controller = {
       },
       type: Sequelize.QueryTypes.DELETE
     })
-    if(!user) {
-      const users = await db.query('SELECT * FROM users', {type: Sequelize.QueryTypes.SELECT})
+    if (!user) {
+      const users = await db.query('SELECT * FROM users', { type: Sequelize.QueryTypes.SELECT })
       res.render('usersList', {
         titulo: 'Usuários',
         subtitulo: 'Listagem de Usuários',

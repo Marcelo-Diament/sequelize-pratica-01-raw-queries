@@ -1,4 +1,4 @@
-# Sequelize | Prática 01 - RAW Queries + MySQL
+# Sequelize RAW Queries MySQL
 
 Prática com Node.js (Express, Express Generator e EJS) e Sequelize (MySQL e Raw Queries)
 
@@ -16,9 +16,7 @@ git clone https://github.com/Marcelo-Diament/express-e-sequelize-base
 cd server && npm run start
 ```
 
-### 1.3. Checkup
-
-Acessar `localhost:8000` e navegar para garantir que está tudo funcionando corretamente.
+### 1.3. Acessar `localhost:8000` e navegar para garantir que está tudo funcionando corretamente.
 
 ## 2. Base Banco (MySQL)
 
@@ -197,9 +195,7 @@ SELECT * FROM users;
 /* /USERS */
 ```
 
-Para ver o diagrama de relacionamento de entidades (DER), basta executar o comando Rever Engineering ( `Control + R` ou `Database > Rever Engineer...` ).
-
-___
+Para ver o diagrama de relacionamento de entidades (DER), basta executar o comando Reverse Engineering ( `Control + R` ou `Database > Reverse Engineer...` ).
 
 ## 3. Instalação Sequelize
 
@@ -477,3 +473,141 @@ Ah! Também vamos fazer um pequeno ajuste no partial template `userDetails.ejs` 
  <p><b>Telefone:</b> <%= `+${usuario.telefone.slice(0,2)} (${usuario.telefone.slice(2,4)}) ${usuario.telefone.slice(4,8)} ${usuario.telefone.slice(8)}` %></p>
 </li>
 ```
+
+### 5.5. Excluindo (Delete) usuário
+
+Bom, já sabemos como ler todos os registros, ler um único (a partir da Primary Key) e agora vamos ver como excluir um usuário do nosso BD.
+
+No arquivo `controllers/acesso.js` , vamos editar nosso método `delete` :
+
+```js
+delete: async (req, res, next) => {
+    const idBuscado = req.params.id.replace('/', '')
+    const user = await db.query(`DELETE from users WHERE users.id = :id`, {
+        replacements: {
+            id: idBuscado
+        },
+        type: Sequelize.QueryTypes.DELETE
+    })
+    if (!user) {
+        const users = await db.query('SELECT * from users', {
+            type: Sequelize.QueryTypes.SELECT
+        })
+        res.render('usersList', {
+            titulo: 'Usuários',
+            subtitulo: 'Listagem de Usuários',
+            usuarios: users,
+            usuarioLogado: req.cookies.usuario,
+            usuarioAdmin: req.cookies.admin
+        })
+    } else {
+        res.status(500).send('Ops... Algo de errado não deu certo!')
+    }
+}
+```
+
+### 5.6. Editando (Update) usuário
+
+Agora vamos completar nosso CRUD com o `Update` ! Esse procedimento pode ser entendido como um 'mix' entre o `Read` e o `Create` .
+
+Basicamente nós 'puxamos' as informações do usuário, deixamos ele editar e depois atualizamos as informações desse registro.
+
+No arquivo `controllers/acesso.js` vamos atualizar 2 métodos: `update` (que traz o formulário preenchido com as informações atuais) e `edit` (que alterará nosso BD de fato).
+
+**`update`**
+
+Basicamente a mesma query que usamos em `controllers/users -> show` :
+
+```js
+update: async (req, res, next) => {
+    const {
+        id
+    } = req.params
+    const user = await db.query(`SELECT * from users WHERE users.id = ${id}`, {
+        type: Sequelize.QueryTypes.SELECT
+    })
+    res.render('userUpdate', {
+        titulo: 'Cadastro',
+        subtitulo: req.cookies.usuario ? `Verifique os dados e atualize os que precisar` : 'Preencha os dados e complete seu cadastro!',
+        usuarioLogado: req.cookies.usuario,
+        usuarioAdmin: req.cookies.admin,
+        usuarioEditando: user[0]
+    })
+}
+```
+
+**`edit`**
+
+```js
+edit: async (req, res, next) => {
+    let {
+        id,
+        nome,
+        sobrenome,
+        apelido,
+        nascimento,
+        senha,
+        corPreferida,
+        avatar,
+        email,
+        telefone,
+        bio
+    } = req.body
+    telefone = telefone.replace(/\D/g, '')
+    id = id.replace(/\D/g, '')
+    const modificadoEm = new Date()
+    const user = await db.query(`
+      UPDATE users
+      SET nome = :nome,
+        sobrenome = :sobrenome,
+        apelido = :apelido,
+        nascimento = :nascimento,
+        ${senha && 'senha = :senha,'}
+        corPreferida = :corPreferida,
+        ${avatar && 'avatar = :avatar,'}
+        email = :email,
+        telefone = :telefone,
+        bio = :bio,
+        modificadoEm = :modificadoEm
+      WHERE users.id = :id
+    `, {
+        replacements: {
+            id,
+            nome,
+            sobrenome,
+            apelido,
+            nascimento,
+            senha,
+            corPreferida,
+            avatar,
+            email,
+            telefone,
+            bio,
+            modificadoEm
+        },
+        type: Sequelize.QueryTypes.UPDATE
+    })
+    if (req.cookies.usuario.id === id) {
+        res.clearCookie('usuario').cookie('usuario', user)
+    }
+    if (user) {
+        res.redirect(`../../usuarios/${id}`)
+    } else {
+        res.status(500).send('Ops... Algo de errado não deu certo!')
+    }
+}
+```
+
+___
+
+## 6.0 DESAFIO
+
+Reproduza as mesmas operações (CRUD), mas com os produtos.
+
+___
+
+## Obrigado pela visita!
+
+Vamos nos conectar? Se quiser trocar idéias, experiências e figurinhas, entre em contato comigo!
+
+Marcelo Diament | Prorietário na [Djament Comunicação](http://djament.com.br/), Development Chapter Leader na [Driven.cx](https://www.driven.cx/) e Instrutor de Programação Full Stack na [Digital House](http://digitalhouse.com.br/) | [Github](https://github.com/Marcelo-Diament) | [LinkedIn](https://www.linkedin.com/in/marcelodiament/)
