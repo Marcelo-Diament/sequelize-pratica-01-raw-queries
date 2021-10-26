@@ -358,3 +358,55 @@ const controller = {
 
 module.exports = controller
 ```
+
+### 5.3. Consultando (Read) usuário
+
+Agora precisamos ler um registro específico, a partir de seu ID. Vamos atualizar o método `show` usando a interpolação:
+
+```js
+show: async (req, res, next) => {
+    const {
+        id
+    } = req.params
+    const user = await db.query(`SELECT * from users WHERE users.id = ${id}`, {
+        type: Sequelize.QueryTypes.SELECT
+    })
+    res.render('user', {
+        titulo: 'Usuário',
+        subtitulo: `Usuário #${id}`,
+        usuario: user[0],
+        usuarioLogado: req.cookies.usuario,
+        usuarioAdmin: req.cookies.admin,
+        bannerTopo: '/images/banner-topo-usuario-1564x472.png',
+        bannerMeio: '/images/banner-meio-usuario-1920x1080.png'
+    });
+}
+```
+
+Veja que recebemos um array de resultados, por isso devemos declarar o índice 0 ao passar o usuário para a view.
+
+Podemos fazer essa `query` de outras 2 maneiras:
+
+1. Replacement com array:
+
+```js
+const user2 = await db.query(`SELECT * from users WHERE users.id = ?`, {
+    replacements: [
+        id
+    ],
+    type: Sequelize.QueryTypes.SELECT
+})
+```
+
+2. Replacement com objeto:
+
+```js
+const user3 = await db.query(`SELECT * from users WHERE users.id = :id`, {
+    replacements: {
+        id
+    },
+    type: Sequelize.QueryTypes.SELECT
+})
+```
+
+Por fim, agora podemos apagar nossa importação de `usuariosPlaceholder.json` , afinal, agora estamos capturando as informações do próprio Banco (ou poderíamos deixar de 'retaguarda' - caso ocorra algum erro, usamos o JSON).

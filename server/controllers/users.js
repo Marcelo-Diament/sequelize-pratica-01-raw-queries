@@ -2,8 +2,6 @@ const Sequelize = require('sequelize'),
   config = require('../config/database'),
   db = new Sequelize(config)
 
-const usuariosPlaceholder = require('../data/usuariosPlaceholder.json')
-
 const controller = {
   index: async (req, res, next) => {
     const users = await db.query('SELECT * FROM users', {
@@ -19,13 +17,15 @@ const controller = {
       bannerMeio: '/images/banner-meio-usuarios-1920x1080.png'
     });
   },
-  show: (req, res, next) => {
+  show: async (req, res, next) => {
     const { id } = req.params
-    const usuario = usuariosPlaceholder[id - 1]
+    const user = await db.query(`SELECT * FROM users WHERE users.id = ${id}`, {
+      type: Sequelize.QueryTypes.SELECT
+    })
     res.render('user', {
       titulo: 'Usuário',
       subtitulo: `Usuário #${id}`,
-      usuario,
+      usuario: user[0],
       usuarioLogado: req.cookies.usuario,
       usuarioAdmin: req.cookies.admin,
       bannerTopo: '/images/banner-topo-usuario-1564x472.png',
